@@ -90,6 +90,8 @@ exports["test trigger starts early"]  = test(function(assert) {
   assert(actual, [1, 3, 5, 5], "early trigger")
 
   trigger.send()
+  trigger.send()
+  trigger.send()
   input.send(1)
   input.send(2)
   input.send(3)
