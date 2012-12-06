@@ -223,3 +223,78 @@ exports["test error in input propagates"] = test(function(assert) {
   input.send(6)
   trigger.send()
 })
+
+exports["test assembler"] = test(function(assert) {
+  var stop = event()
+  var input = event()
+  var trigger = event()
+
+  var sampled = sample(input, trigger, function(value, beat) {
+    return value + beat
+  })
+  var actual = concat(sampled, stop)
+
+  assert(actual, ["3a", "5b", "5c", "5d"], "trigger ends sample")
+
+  input.send(1)
+  input.send(2)
+  input.send(3)
+  trigger.send("a")
+  input.send(4)
+  input.send(5)
+  trigger.send("b")
+  trigger.send("c")
+  trigger.send("d")
+  input.send(6)
+  input.send(end)
+
+  assert.ok(input.isReduced, "input is reduced")
+  assert.ok(!trigger.isReduced, "trigger is not reduced")
+
+  input.send(6)
+  trigger.send("e")
+
+  assert.ok(trigger.isReduced, "trigger is reduced on next yield")
+
+  trigger.send("f")
+  trigger.send("g")
+  input.send(7)
+  stop.send(end)
+})
+
+exports["test assemble with prior trigger"]  = test(function(assert) {
+  var stop = event()
+  var input = event()
+  var trigger = event()
+
+  var sampled = sample(input, trigger, function(value, trigger) {
+    return value + trigger
+  })
+  var actual = concat(sampled, stop)
+
+  assert(actual, ["1c", "3d", "5e", "5f"], "early trigger")
+
+  trigger.send("a")
+  trigger.send("b")
+  trigger.send("c")
+  input.send(1)
+  input.send(2)
+  input.send(3)
+  trigger.send("d")
+  input.send(4)
+  input.send(5)
+  trigger.send("e")
+  trigger.send("f")
+  trigger.send(end)
+
+  assert.ok(trigger.isReduced, "trigger is reduced")
+  assert.ok(!input.isReduced, "input is not reduced")
+
+  input.send(6)
+
+  assert.ok(input.isReduced, "input is reduced on next yield")
+
+  input.send(7)
+  stop.send(end)
+})
+
